@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Backup & Migration Tool</title>
+    <style>
+        :root {
+            --bg-color: #f4f5f7;
+            --container-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #6b778c;
+            --border-main: #dfe1e6;
+            --primary-blue: #0052cc;
+            --primary-blue-hover: #0047b3;
+            --border-focus: #4c9aff;
+            --tab-active-bg: #ffffff;
+            --tab-inactive-bg: #f4f5f7;
+            --tab-active-border: #0052cc;
+            --console-bg: #172b4d;
+            --console-text: #36b37e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-main);
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(9, 30, 66, 0.13);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-main);
+            background-color: var(--container-bg);
+        }
+
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .header p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-main);
+            background-color: var(--tab-inactive-bg);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+            border-bottom: 3px solid transparent;
+            user-select: none;
+        }
+
+        .tab:hover {
+            background-color: #ebecf0;
+        }
+
+        .tab.active {
+            color: var(--primary-blue);
+            border-bottom: 3px solid var(--tab-active-border);
+            background-color: var(--tab-active-bg);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 32px 24px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: var(--container-bg);
+            border: 2px solid var(--border-main);
+            color: var(--text-main);
+            border-radius: 4px;
+            box-sizing: border-box;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--border-focus);
+        }
+
+        input[type="text"]::placeholder {
+            color: #a5adba;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            background-color: var(--primary-blue);
+            color: #ffffff;
+        }
+
+        button:hover {
+            background-color: var(--primary-blue-hover);
+        }
+
+        button:disabled {
+            background-color: var(--border-main);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .console-container {
+            margin: 0 24px 24px 24px;
+            border-radius: 4px;
+            background-color: var(--console-bg);
+            padding: 16px;
+            height: 320px;
+            overflow-y: auto;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .console-output {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--console-text);
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .info-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 0;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>Git Backup & Migration Interface</h2>
+            <p>Internal DevOps Utility via Docker</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('auto')">Automated Migration (GitHub to GitLab)</div>
+            <div class="tab" onclick="switchTab('manual')">Platform Agnostic Migration</div>
+        </div>
+
+        <!-- Automated Tab -->
+        <div id="tab-auto" class="tab-content active">
+            <p class="info-text">Executes an automated extraction from GitHub and mirrors to GitLab. API tokens and
+                namespaces are sourced securely from the backend environment configuration.</p>
+            <div class="form-group">
+                <label for="targetRepo">Target Repository Name</label>
+                <input type="text" id="targetRepo" placeholder="e.g. user-service" required>
+            </div>
+            <button id="btnAutoStart" onclick="startAutoMigration()">Start Migration</button>
+        </div>
+
+        <!-- Manual Tab -->
+        <div id="tab-manual" class="tab-content">
+            <p class="info-text">Perform a bare clone and mirror push between any two Git endpoints. Authentication
+                should be injected directly into the URLs provided below.</p>
+            <div class="form-group">
+                <label for="sourceUrl">Source Clone URL</label>
+                <input type="text" id="sourceUrl" placeholder="https://username:token@github.com/org/repo.git">
+            </div>
+            <div class="form-group">
+                <label for="destUrl">Destination Push URL</label>
+                <input type="text" id="destUrl" placeholder="https://oauth2:token@gitlab.com/org/repo.git">
+            </div>
+            <button id="btnManualStart" onclick="startManualMigration()">Execute Transfer</button>
+        </div>
+
+        <div class="console-container">
+            <pre id="consoleOutput" class="console-output">System idle. Awaiting user instruction...</pre>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            if (tabId === 'auto') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('tab-auto').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('tab-manual').classList.add('active');
+            }
+        }
+
+        function appendLog(text) {
+            const consoleOut = document.getElementById('consoleOutput');
+            if (consoleOut.innerText === 'System idle. Awaiting user instruction...') {
+                consoleOut.innerText = '';
+            }
+            consoleOut.innerText += text + '\n';
+            consoleOut.parentElement.scrollTop = consoleOut.parentElement.scrollHeight;
+        }
+
+        function streamResponse(url, options, btnId) {
+            const btn = document.getElementById(btnId);
+            btn.disabled = true;
+
+            document.getElementById('consoleOutput').innerText = '';
+            appendLog(`[SYSTEM] Initiating request to ${url}...`);
+
+            fetch(url, options).then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                function readStream() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            appendLog('[SYSTEM] Stream connection closed.');
+                            btn.disabled = false;
+                            return;
+                        }
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+                        for (let line of lines) {
+                            if (line.startsWith('data: ')) {
+                                appendLog(line.substring(6));
+                            }
+                        }
+                        readStream();
+                    }).catch(error => {
+                        appendLog(`[ERROR] Stream reading failed: ${error}`);
+                        btn.disabled = false;
+                    });
+                }
+                readStream();
+            }).catch(error => {
+                appendLog(`[ERROR] Request failed: ${error}`);
+                btn.disabled = false;
+            });
+        }
+
+        function startAutoMigration() {
+            const repoName = document.getElementById('targetRepo').value.trim();
+            if (!repoName) {
+                alert("Please specify a Target Repository Name.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('repo_name', repoName);
+
+            streamResponse('/migrate-auto', {
+                method: 'POST',
+                body: formData
+            }, 'btnAutoStart');
+        }
+
+        function startManualMigration() {
+            const src = document.getElementById('sourceUrl').value.trim();
+            const dest = document.getElementById('destUrl').value.trim();
+
+            if (!src || !dest) {
+                alert("Please provide both Source and Destination URLs.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('source_url', src);
+            formData.append('dest_url', dest);
+
+            streamResponse('/migrate-manual', {
+                method: 'POST',
+                body: formData
+            }, 'btnManualStart');
+        }
+    </script>
+</body>
+
+</html>

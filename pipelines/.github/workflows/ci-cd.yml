@@ -1,0 +1,41 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint and Syntax Check
+        run: |
+          pip install flake8
+          flake8 src/main/app.py --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 src/main/app.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run Unit Tests
+        run: |
+          PYTHONPATH=src/main pytest tests/unit/
+
+      - name: Build Docker Image
+        run: |
+          docker build -t git-migration-tool:latest -f infrastructure/docker/Dockerfile .
